@@ -7,10 +7,7 @@
     "clean": "rimraf dist",
     "build": "npm run clean && tsc --build",
     "start": "node ./dist/app.js",
-    "start:dev": "nodemon ./src/app.ts",
-    "migrate": "sequelize-cli db:migrate",
-    "migrate:undo": "sequelize-cli db:migrate:undo",
-    "seed": "sequelize-cli db:seed:all"
+    "start:dev": "nodemon ./src/app.ts"
   },
   "keywords": [],
   "author": "",
