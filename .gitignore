@@ -1,0 +1,33 @@
+# Environment Variables
+.env
+
+# Node Modules
+node_modules/
+
+# Distribution (Build Output)
+dist/
+
+# TypeScript Build Info
+tsconfig.tsbuildinfo
+
+# Docker Initialization SQL Script
+init.sql
+
+# IDE Directories
+.idea/
+.vscode/
+
+# Log files
+*.log
+
+# NPM Debug Files
+npm-debug.log*
+
+# Test Coverage
+coverage/
+
+# Temporary Cache Files
+.cache/
+
+# Generated Prisma Client (if applicable)
+prisma/generated/
