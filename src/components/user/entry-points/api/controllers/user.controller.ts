@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { CreateUserBody, CreateUserResponse, ErrorResponse, GetUserParams, LoginRequest, LoginResponse, LogoutRequest, LogoutResponse, UpdateUserBody, UpdateUserResponse, ValidatedRequest } from "../dtos/userCrud.dto"
+import { CheckEmailAvailabilityRequest, CreateUserBody, CreateUserResponse, ErrorResponse, GetUserParams, LoginRequest, LoginResponse, LogoutRequest, LogoutResponse, UpdateUserBody, UpdateUserResponse, ValidatedRequest } from "../dtos/userCrud.dto"
 import { autoInjectable } from "tsyringe";
 import UserService from "../../../domain/services/user.service";
 import { UserDto } from "../../../domain/dtos/user.dto";
@@ -36,7 +36,10 @@ export default class UserController {
         this._router.post("/login", this.login.bind(this))
 
         //User Logout
-        this._router.post("/logout", authenticateJWT, this.logout.bind(this))
+        this._router.get("/logout", authenticateJWT, this.logout.bind(this))
+
+        //Check email availability
+        this._router.post("/email-available", this.checkEmailAvailability.bind(this))
     }
 
     private async getUser(req: Request<GetUserParams>, res: Response<UserDto|ErrorResponse>): Promise<void> {
@@ -129,6 +132,16 @@ export default class UserController {
         const userToUpdate = {...user, email: email}
         const updatedUser = await this.userService.updateUser(userToUpdate)
         res.status(200).send(updatedUser)
+    }
+
+    private async checkEmailAvailability(req: Request<{}, {}, CheckEmailAvailabilityRequest>, res: Response<ErrorResponse>) {
+        const {email} = req.body
+        const result = await this.userService.checkEmailAvailability(email)
+        if(result) {
+            res.status(200).send()
+        } else {
+            res.status(400).send({message: "Email already in use"})
+        }
     }
 
     

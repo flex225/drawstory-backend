@@ -8,12 +8,22 @@ export enum Environment {
     Production = 'production',
 }
 
+interface AwsConfig {
+    accessKey: string,
+    secretAccessKey: string,
+    region: string,
+    bucketName: string
+}
+
 interface ProjectConfig {
     port: number,
     env: Environment,
     jwtSecret: string,
     redisUrl: string,
-    redisPassword: string
+    redisPassword: string,
+    awsConfig: AwsConfig,
+    googleClientId: string,
+    googleClientSecret: string
 }
 
 const config: ProjectConfig = {
@@ -21,7 +31,15 @@ const config: ProjectConfig = {
     env: (process.env.NODE_ENV as Environment) || Environment.Development,
     jwtSecret: process.env.JWT_SECRET || "",
     redisUrl: process.env.REDIS_URL || "",
-    redisPassword: process.env.REDIS_PASSWORD || ""
+    redisPassword: process.env.REDIS_PASSWORD || "",
+    awsConfig: {
+        accessKey: process.env.AWS_ACCESS_KEY_ID || "",
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+        region: process.env.AWS_REGION || "",
+        bucketName: process.env.AWS_S3_BUCKET_NAME || "",
+    },
+    googleClientId: process.env.GOOGLE_CLIENT_ID || "",
+    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || ""
 }
 
 export default config

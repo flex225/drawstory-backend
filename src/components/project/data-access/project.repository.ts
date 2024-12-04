@@ -2,6 +2,7 @@ import { autoInjectable } from "tsyringe";
 import PrismaService from "../../../libraries/prisma/prisma.service";
 import { Comment, Project, Scene } from "@prisma/client";
 import { LightweightProject, LightweightScene, NewProject, ProjectWithScenes } from "./project.types";
+import { CreateSceneRequest, SaveProjectRequest } from "../entry-points/api/dtos/project.crud.dto";
 
 
 
@@ -11,21 +12,46 @@ export default class ProjectRepository {
 
     async createProject(
         title: string,
-        imageUrl: string,
+        scenes: CreateSceneRequest[],
         authorId: string
-    ): Promise<NewProject> {
-        return await this.prisma.project.create({
-            data: {
-                title,
-                imageUrl,
-                authorId
-            },
-            select: { 
-                id: true, 
-                title: true, 
-                createdAt: true, 
-                updatedAt: true 
-            },
+    ): Promise<ProjectWithScenes|null> {
+        const imageUrl = scenes[0].imageUrl
+        return await this.prisma.$transaction(async (prisma) => {
+            const project = await prisma.project.create({
+                data: {
+                    title,
+                    imageUrl,
+                    authorId
+                },
+            })
+
+            const scenePromises = scenes.map((scene, index) => 
+                prisma.scene.create({
+                    data: {
+                        projectId: project.id,
+                        description: scene.description ?? "",
+                        voiceOver: "",
+                        indexInProject: index,
+                        imageUrl: scene.imageUrl,
+                    },
+                })
+            )
+
+            await Promise.all(scenePromises)
+
+            return await prisma.project.findUnique({
+                where: {
+                    id: project.id
+                },
+                include: {
+                    scenes: {
+                        orderBy: {
+                            indexInProject: 'asc'
+                        }
+                    }
+                }
+            })
+
         })
     }
 
@@ -36,7 +62,14 @@ export default class ProjectRepository {
                 isDeleted: false
             },
             include: {
-                scenes: true
+                scenes: {
+                    where: {
+                        isDeleted: false
+                    },
+                    orderBy: {
+                        indexInProject: 'asc'
+                    }
+                }
             }
         })
     }
@@ -74,6 +107,26 @@ export default class ProjectRepository {
         });
     }
 
+    async saveProject(
+        updatedProject: SaveProjectRequest
+    ) {
+        return await this.prisma.$transaction<ProjectWithScenes | null>(async () => {
+            await this.updateProject(updatedProject.id, updatedProject.title, updatedProject.imageUrl)
+
+            const scenePromises = updatedProject.scenes.map((scene, index) => {
+                if (scene.id) {
+                    return this.updateScene(index, scene.id, scene.description, scene.voiceOver, scene.imageUrl)
+                } else {
+                    return this.addSceneToProject(updatedProject.id, scene.description, "", scene.imageUrl, index)
+                }
+            })
+
+            await Promise.all(scenePromises)
+            return await this.getProjectById(updatedProject.id)
+        })
+
+    }
+
     // Soft delete a project by ID
     async softDeleteProject(projectId: string): Promise<LightweightProject | null> {
         return await this.prisma.project.update({
@@ -100,9 +153,11 @@ export default class ProjectRepository {
         return await this.prisma.scene.findMany({
             where: {
                 projectId,
+                isDeleted: false
             },
             select: {
                 id: true,
+                indexInProject: true,
                 description: true,
                 voiceOver: true,
                 imageUrl: true,
@@ -112,42 +167,87 @@ export default class ProjectRepository {
         });
     }
 
+    async getProjectSceneCount(projectId: string): Promise<number> {
+        return await this.prisma.scene.count({
+            where: {
+                projectId: projectId,
+                isDeleted: false
+            }
+        })
+    }
+
     // Add a scene to a project
     async addSceneToProject(
         projectId: string,
         description: string,
         voiceOver: string,
-        imageUrl: string
+        imageUrl: string,
+        index?: number,
     ): Promise<LightweightScene> {
+        const addIndex = index ?? await this.getProjectSceneCount(projectId)
         return await this.prisma.scene.create({
             data: {
                 projectId,
                 description,
                 voiceOver,
                 imageUrl,
+                indexInProject: addIndex
             },
         });
     }
 
+    async batchAddSceneToProject(
+        projectId: string,
+        scenes: CreateSceneRequest[]
+    ): Promise<LightweightScene[]> {
+        const sceneCount = await this.getProjectSceneCount(projectId)
+        const scenePromises = scenes.map((scene, index) =>
+            this.prisma.scene.create({
+                data: {
+                    projectId: projectId,
+                    description: scene.description,
+                    voiceOver: "",
+                    imageUrl: scene.imageUrl,
+                    indexInProject: sceneCount + index
+                },
+            })
+        )
+
+        return await Promise.all(scenePromises)
+    }
+
     async updateScene(
+        index: number,
         sceneId: string,
         description?: string,
         voiceOver?: string,
-        imageUrl?: string
+        imageUrl?: string,
     ): Promise<LightweightScene|null> {
         return await this.prisma.scene.update({
             where: {
                 id: sceneId
             },
             data: {
-                ...(description && { description }),
-                ...(voiceOver && { voiceOver }),
-                ...(imageUrl && { imageUrl })  
+                indexInProject: index,
+                description: description ?? "",
+                voiceOver: voiceOver ?? "",
+                imageUrl: imageUrl ?? ""
             }
         })
     }
 
     async removeScene(sceneId: string): Promise<LightweightScene|null> {
+        return await this.prisma.scene.update({
+            where: {
+                id: sceneId
+            },
+            data: {
+                isDeleted: true
+            }
+        })
+    }
+
+    async removeScenePermanently(sceneId: string): Promise<LightweightScene | null> {
         return await this.prisma.scene.delete({
             where: {
                 id: sceneId

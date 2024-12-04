@@ -23,6 +23,17 @@ export default class AuthService {
         return null;
     }
 
+    async loginSocialUser(email: string): Promise<{ token: string, userId: string } | null> {
+        const user = await this.userService.getUserByEmail(email);
+        if (user) {
+            const token = generateToken(user.id);
+            await this.redisService.set(user.id, { userId: user.id, token: token });
+
+            return { token, userId: user.id };
+        }
+        return null;
+    }
+
     async logoutUser(userId: string): Promise<void> {
         await this.redisService.del(userId)
     }

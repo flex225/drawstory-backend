@@ -36,6 +36,7 @@ const lightweightScene = Prisma.validator<Prisma.SceneDefaultArgs>()({
         id: true,
         imageUrl: true,
         description: true,
+        indexInProject: true,
         voiceOver: true,
         createdAt: true,
         updatedAt: true

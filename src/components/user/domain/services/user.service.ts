@@ -25,8 +25,18 @@ export default class UserService {
         return mapUserToUserDto(newUser)
     }
 
+    async createSocialUser(email: string, socialId: string, provider: string) {
+        const newUser = await this.userRepository.createSocialUser(email, socialId, provider)
+        return mapUserToUserDto(newUser)
+    }
+
     async updateUser(updatedUser: UserDto) {
         const result = await this.userRepository.updateUser(updatedUser)
         return mapUserToUserDto(result)
+    }
+
+    async checkEmailAvailability(email: string) {
+        const result = await this.userRepository.findEmail(email)
+        return !Boolean(result)
     }
 }

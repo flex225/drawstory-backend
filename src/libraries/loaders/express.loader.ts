@@ -5,6 +5,7 @@ import { container } from "tsyringe"
 import config from "../../config"
 import authenticateJWT from "../auth/middlewares/jwt.middleware"
 import ProjectController from "../../components/project/entry-points/api/controllers/project.controller"
+import OAuthController from "../../components/user/entry-points/api/controllers/oauth.controller"
 
 const loadExpress = (app: Express) => {
     app.use(cors({ origin: "*" }))
@@ -12,6 +13,9 @@ const loadExpress = (app: Express) => {
     
     const userController = container.resolve(UserController)
     app.use("/users", userController.routes)
+
+    const oAuthController = container.resolve(OAuthController)
+    app.use("/oauth", oAuthController.routes)
 
     const projectController = container.resolve(ProjectController)
     app.use("/projects", authenticateJWT, projectController.routes)

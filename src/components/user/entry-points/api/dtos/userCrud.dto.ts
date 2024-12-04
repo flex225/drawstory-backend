@@ -56,3 +56,7 @@ export interface LogoutResponse {
 export interface ValidatedRequest extends Request {
     userId: string
 }
+
+export interface CheckEmailAvailabilityRequest {
+    email: string
+}

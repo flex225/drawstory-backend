@@ -25,11 +25,29 @@ export default class UserRepository {
         })
     }
 
+    async createSocialUser(email: string, socialId: string, provider: string): Promise<User> {
+        return await this.prisma.user.create({
+            data: {
+                email: email,
+                providerId: socialId,
+                provider: provider
+            }
+        })
+    }
+
     async updateUser(updatedUser: UserDto): Promise<User> {
         return await this.prisma.user.update({
             where: {id: updatedUser.id},
             data: {
                 email: updatedUser.email
+            }
+        })
+    }
+
+    async findEmail(email: string): Promise<User|null> {
+        return await this.prisma.user.findFirst({
+            where: {
+                email: email
             }
         })
     }
