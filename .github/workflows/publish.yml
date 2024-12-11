@@ -70,7 +70,7 @@ jobs:
             npm install
 
             echo "=== Step 8: Starting Docker Compose Services ==="
-            docker-compose up -d
+            sudo docker-compose up -d
 
             echo "=== Step 9: Running Prisma Migrations ==="
             npx prisma migrate deploy
@@ -79,8 +79,12 @@ jobs:
             npm run build
 
             echo "=== Step 11: Starting PM2 Instance ==="
+            cd ~/apps
             pm2 start ecosystem.config.js
 
             echo "=== Step 12: Saving PM2 Process List ==="
             pm2 save
+
+            echo "=== Step 13: Exiting ==="
+            exit
           EOF
