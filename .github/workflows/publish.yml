@@ -21,7 +21,7 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -t ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -tt ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
             echo "=== Step 1: Checking for NVM ==="
             if ! command -v nvm &> /dev/null; then
               echo "NVM not found. Installing..."
