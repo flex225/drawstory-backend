@@ -70,7 +70,7 @@ jobs:
             npm install
 
             echo "=== Step 8: Starting Docker Compose Services ==="
-            sudo docker-compose up -d
+            sudo docker compose up -d
 
             echo "=== Step 9: Running Prisma Migrations ==="
             npx prisma migrate deploy
