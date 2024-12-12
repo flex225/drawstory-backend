@@ -13,17 +13,30 @@ export default class ProjectRepository {
     async createProject(
         title: string,
         scenes: CreateSceneRequest[],
-        authorId: string
+        authorId: string,
+        projectId?: string
     ): Promise<ProjectWithScenes|null> {
         const imageUrl = scenes[0].imageUrl
         return await this.prisma.$transaction(async (prisma) => {
-            const project = await prisma.project.create({
-                data: {
-                    title,
-                    imageUrl,
-                    authorId
-                },
-            })
+            let project: Project
+            if(projectId) {
+                project = await prisma.project.create({
+                    data: {
+                        id: projectId,
+                        title,
+                        imageUrl,
+                        authorId
+                    },
+                })
+            } else {
+                project = await prisma.project.create({
+                    data: {
+                        title,
+                        imageUrl,
+                        authorId
+                    },
+                })
+            }
 
             const scenePromises = scenes.map((scene, index) => 
                 prisma.scene.create({

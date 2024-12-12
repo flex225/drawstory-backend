@@ -1,20 +1,23 @@
 import { ParamsDictionary } from "express-serve-static-core"
 import { ProjectWithScenes } from "../../../data-access/project.types"
 import { Request } from "express-serve-static-core"
+import { ValidatedRequest } from "../../../../user/entry-points/api/dtos/userCrud.dto"
 
 export interface CreateProjectRequest {
     title: string,
+    projectId?: string,
     scenes: CreateSceneRequest[]
 }
 
-export interface UploadImagesRequest extends Request {
+export interface UploadImagesRequest extends ValidatedRequest {
     files: Express.Multer.File[],
     body: {
-        projectId: string
+        projectId?: string
     }
 }
 
 export interface UploadImagesResponse {
+    projectId: string,
     images: string[]
 }
 

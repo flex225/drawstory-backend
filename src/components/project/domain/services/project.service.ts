@@ -13,9 +13,10 @@ export default class ProjectService {
     async createProject(
         title: string,
         scenes: CreateSceneRequest[],
-        authorId: string
+        authorId: string,
+        projectId?: string
     ) {
-        return await this.projectRepository.createProject(title, scenes, authorId)
+        return await this.projectRepository.createProject(title, scenes, authorId, projectId)
     }
 
     async getProjectById(projectId: string) {

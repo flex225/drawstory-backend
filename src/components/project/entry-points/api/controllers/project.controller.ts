@@ -43,13 +43,13 @@ export default class ProjectController {
     }
 
     private async createProject(req: Request<{}, {}, CreateProjectRequest>, res: Response<NewProject | ErrorResponse>): Promise<void> {
-        const { title, scenes } = req.body
+        const { title, scenes, projectId } = req.body
         const userId = (req as ValidatedRequest).userId
         if (!title) {
             res.status(400).send({ message: "Title not found" })
             return
         }
-        const result = await this.projectService.createProject(title, scenes, userId)
+        const result = await this.projectService.createProject(title, scenes, userId, projectId)
         if (result) {
             res.status(200).send(result)
         } else {
@@ -156,11 +156,18 @@ export default class ProjectController {
     private async uploadImages(req: Request, res: Response<UploadImagesResponse | ErrorResponse>): Promise<void> {
         const customReq = req as UploadImagesRequest
         try {
-            const { projectId } = req.body
+            const { projectId } = customReq.body
             if (!customReq.files || !Array.isArray(customReq.files)) {
                 res.status(400).send({ message: 'No files uploaded' })
                 return
             }
+            let id
+            if (projectId) {
+                id = projectId
+            } else {
+                id = randomUUID()
+            }
+            console.log(id)
             const bucketName = config.awsConfig.bucketName
             if (bucketName.length === 0) {
                 res.status(400).send({ message: 'Bucket not configured' })
@@ -170,7 +177,7 @@ export default class ProjectController {
             const uploadedUrls = await Promise.all(
                 customReq.files.map(async (file: Express.Multer.File, index: number) => {
                     const fileExtension = path.extname(file.originalname)
-                    const key = `${projectId ?? `placeholder_${randomUUID}`}/image_${index + 1}${fileExtension}`
+                    const key = `${customReq.userId}/${id}/image_${index + 1}${fileExtension}`
                     const uploadParams: PutObjectCommandInput = {
                         Bucket: bucketName,
                         Key: key,
@@ -187,7 +194,7 @@ export default class ProjectController {
                 })
             );
 
-            res.status(200).send({ images: uploadedUrls });
+            res.status(200).send({ projectId: id, images: uploadedUrls });
         } catch (error) {
             console.error('Error uploading files to S3:', error);
             res.status(500).send({ message: 'Error uploading files' });
