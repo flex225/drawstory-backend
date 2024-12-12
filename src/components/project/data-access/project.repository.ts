@@ -128,7 +128,7 @@ export default class ProjectRepository {
 
             const scenePromises = updatedProject.scenes.map((scene, index) => {
                 if (scene.id) {
-                    return this.updateScene(index, scene.id, scene.description, scene.voiceOver, scene.imageUrl)
+                    return this.updateScene(index, scene.id, scene.description, scene.voiceOver, scene.imageUrl, scene.isDeleted)
                 } else {
                     return this.addSceneToProject(updatedProject.id, scene.description, "", scene.imageUrl, index)
                 }
@@ -235,6 +235,7 @@ export default class ProjectRepository {
         description?: string,
         voiceOver?: string,
         imageUrl?: string,
+        isDeleted?: boolean
     ): Promise<LightweightScene|null> {
         return await this.prisma.scene.update({
             where: {
@@ -244,7 +245,8 @@ export default class ProjectRepository {
                 indexInProject: index,
                 description: description ?? "",
                 voiceOver: voiceOver ?? "",
-                imageUrl: imageUrl ?? ""
+                imageUrl: imageUrl ?? "",
+                isDeleted: isDeleted ?? false
             }
         })
     }
