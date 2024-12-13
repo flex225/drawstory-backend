@@ -23,8 +23,7 @@ export default class UserController {
 
 
     private defineRoutes(): void {
-        //Get User via ID
-        this._router.get("/:userId",  authenticateJWT, this.getUser.bind(this))
+
 
         //Register User
         this._router.post("/register", this.registerUser.bind(this))
@@ -40,56 +39,57 @@ export default class UserController {
 
         //Check email availability
         this._router.post("/email-available", this.checkEmailAvailability.bind(this))
+        //Get User via ID
+        this._router.get("/:userId", authenticateJWT, this.getUser.bind(this))
     }
 
-    private async getUser(req: Request<GetUserParams>, res: Response<UserDto|ErrorResponse>): Promise<void> {
+    private async getUser(req: Request<GetUserParams>, res: Response<UserDto | ErrorResponse>): Promise<void> {
         const { userId } = req.params
         if (!userId) {
             res.status(400).send({ message: "Bad Request" })
             return
         }
         const user = await this.userService.getUserById(userId)
-
-        if(user === null) {
-            res.status(404).send({message: "User not found"})
+        if (user === null) {
+            res.status(404).send({ message: "User not found" })
             return
         }
         res.status(200).send(user)
     }
 
-    private async registerUser(req: Request<{}, {}, CreateUserBody>, res: Response<CreateUserResponse|ErrorResponse>): Promise<void> {
+    private async registerUser(req: Request<{}, {}, CreateUserBody>, res: Response<CreateUserResponse | ErrorResponse>): Promise<void> {
         const { email, password } = req.body
 
         const emailValidationResult = validateEmail(email)
-        if(emailValidationResult.errors.length > 0) {
-            res.status(400).send({message: emailValidationResult.errors[0]})
+        if (emailValidationResult.errors.length > 0) {
+            res.status(400).send({ message: emailValidationResult.errors[0] })
             return
         }
 
         const existingUser = await this.userService.getUserByEmail(email)
-        if(existingUser) {
-            res.status(400).send({message: "Email is already in use"})
+        if (existingUser) {
+            res.status(400).send({ message: "Email is already in use" })
             return
         }
 
         const passwordValidationResult = validatePasswordDetailed(password)
-        if(passwordValidationResult.errors.length > 0) {
-            res.status(400).send({message: "Invalid password.", details: passwordValidationResult.errors})
+        if (passwordValidationResult.errors.length > 0) {
+            res.status(400).send({ message: "Invalid password.", details: passwordValidationResult.errors })
             return
         }
-        
+
         const createdUser = await this.userService.createUser(email, password)
         const token = generateToken(createdUser.id)
 
-        await this.redisService.set(createdUser.id, {userId: createdUser.id, token: token})
+        await this.redisService.set(createdUser.id, { userId: createdUser.id, token: token })
 
-        res.status(200).send({token: token, userId: createdUser.id})
+        res.status(200).send({ token: token, userId: createdUser.id })
     }
 
     private async login(req: Request<{}, {}, LoginRequest>, res: Response<LoginResponse | ErrorResponse>): Promise<void> {
         const { email, password } = req.body;
-        if(!email || !password) {
-            res.status(400).send({message: "Bad Request"})
+        if (!email || !password) {
+            res.status(400).send({ message: "Bad Request" })
             return
         }
         const loginResult = await this.authService.loginUser(email, password);
@@ -102,15 +102,19 @@ export default class UserController {
     }
 
     async logout(req: Request, res: Response<LogoutResponse | ErrorResponse>): Promise<void> {
-        const userId = (req as ValidatedRequest).userId;
-        await this.authService.logoutUser(userId);
-        res.status(200).send({ message: 'Logout successful' });
+        try {
+            const userId = (req as ValidatedRequest).userId;
+            await this.authService.logoutUser(userId);
+            res.status(200).send({ message: 'Logout successful' });
+        } catch (error) {
+            res.status(500).send({ message: "Something went wrong" })
+        }
     }
 
-    private async updateUser(req: Request<{}, {}, UpdateUserBody>, res: Response<UserDto|ErrorResponse>): Promise<void> {
+    private async updateUser(req: Request<{}, {}, UpdateUserBody>, res: Response<UserDto | ErrorResponse>): Promise<void> {
         const { userId, email } = req.body
-        if(!userId || !email) {
-            res.status(400).send({message: "Bad Request"})
+        if (!userId || !email) {
+            res.status(400).send({ message: "Bad Request" })
             return
         }
         const requestingUserId = (req as ValidatedRequest).userId
@@ -119,8 +123,8 @@ export default class UserController {
             return
         }
         const user = await this.userService.getUserById(userId)
-        if(user === null) {
-            res.status(400).send({message: "User with specified id doesn't exist"})
+        if (user === null) {
+            res.status(400).send({ message: "User with specified id doesn't exist" })
             return
         }
 
@@ -129,22 +133,22 @@ export default class UserController {
             res.status(400).send({ message: emailValidationResult.errors[0] })
             return
         }
-        const userToUpdate = {...user, email: email}
+        const userToUpdate = { ...user, email: email }
         const updatedUser = await this.userService.updateUser(userToUpdate)
         res.status(200).send(updatedUser)
     }
 
     private async checkEmailAvailability(req: Request<{}, {}, CheckEmailAvailabilityRequest>, res: Response<ErrorResponse>) {
-        const {email} = req.body
+        const { email } = req.body
         const result = await this.userService.checkEmailAvailability(email)
-        if(result) {
+        if (result) {
             res.status(200).send()
         } else {
-            res.status(400).send({message: "Email already in use"})
+            res.status(400).send({ message: "Email already in use" })
         }
     }
 
-    
+
     public get routes(): Router {
         return this._router
     }
