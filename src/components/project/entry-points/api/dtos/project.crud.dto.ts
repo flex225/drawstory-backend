@@ -1,6 +1,4 @@
 import { ParamsDictionary } from "express-serve-static-core"
-import { ProjectWithScenes } from "../../../data-access/project.types"
-import { Request } from "express-serve-static-core"
 import { ValidatedRequest } from "../../../../user/entry-points/api/dtos/userCrud.dto"
 
 export interface CreateProjectRequest {
@@ -84,4 +82,8 @@ export interface UpdateSceneRequest {
     description?: string,
     voiceOver?: string,
     imageUrl?: string
+}
+
+export interface RestoreProjectRequest {
+    id: string
 }

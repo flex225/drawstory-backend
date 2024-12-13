@@ -1,25 +1,25 @@
+import { Project } from "@prisma/client";
 import { autoInjectable } from "tsyringe";
 import PrismaService from "../../../libraries/prisma/prisma.service";
-import { Comment, Project, Scene } from "@prisma/client";
-import { LightweightProject, LightweightScene, NewProject, ProjectWithScenes } from "./project.types";
 import { CreateSceneRequest, SaveProjectRequest } from "../entry-points/api/dtos/project.crud.dto";
+import { LightweightProject, LightweightScene, ProjectWithScenes } from "./project.types";
 
 
 
 @autoInjectable()
 export default class ProjectRepository {
-    constructor(private prisma: PrismaService) {}
+    constructor(private prisma: PrismaService) { }
 
     async createProject(
         title: string,
         scenes: CreateSceneRequest[],
         authorId: string,
         projectId?: string
-    ): Promise<ProjectWithScenes|null> {
+    ): Promise<ProjectWithScenes | null> {
         const imageUrl = scenes[0].imageUrl
         return await this.prisma.$transaction(async (prisma) => {
             let project: Project
-            if(projectId) {
+            if (projectId) {
                 project = await prisma.project.create({
                     data: {
                         id: projectId,
@@ -38,7 +38,7 @@ export default class ProjectRepository {
                 })
             }
 
-            const scenePromises = scenes.map((scene, index) => 
+            const scenePromises = scenes.map((scene, index) =>
                 prisma.scene.create({
                     data: {
                         projectId: project.id,
@@ -68,7 +68,7 @@ export default class ProjectRepository {
         })
     }
 
-    async getProjectById(projectId: string): Promise<ProjectWithScenes|null> {
+    async getProjectById(projectId: string): Promise<ProjectWithScenes | null> {
         return await this.prisma.project.findUnique({
             where: {
                 id: projectId,
@@ -116,7 +116,8 @@ export default class ProjectRepository {
             },
             data: {
                 ...(title && { title }),
-                ...(imageUrl && { imageUrl })            },
+                ...(imageUrl && { imageUrl })
+            },
         });
     }
 
@@ -152,14 +153,14 @@ export default class ProjectRepository {
         });
     }
 
-    // Delete a project permanently by ID
-    async deleteProjectPermanently(projectId: string): Promise<Project | null> {
-        return await this.prisma.project.delete({
-            where: {
-                id: projectId,
-            },
-        });
-    }
+    // // Delete a project permanently by ID
+    // async deleteProjectPermanently(projectId: string): Promise<Project | null> {
+    //     return await this.prisma.project.delete({
+    //         where: {
+    //             id: projectId,
+    //         },
+    //     });
+    // }
 
     // Get all scenes for a specific project
     async getScenesForProject(projectId: string): Promise<LightweightScene[]> {
@@ -209,25 +210,25 @@ export default class ProjectRepository {
         });
     }
 
-    async batchAddSceneToProject(
-        projectId: string,
-        scenes: CreateSceneRequest[]
-    ): Promise<LightweightScene[]> {
-        const sceneCount = await this.getProjectSceneCount(projectId)
-        const scenePromises = scenes.map((scene, index) =>
-            this.prisma.scene.create({
-                data: {
-                    projectId: projectId,
-                    description: scene.description,
-                    voiceOver: "",
-                    imageUrl: scene.imageUrl,
-                    indexInProject: sceneCount + index
-                },
-            })
-        )
+    // async batchAddSceneToProject(
+    //     projectId: string,
+    //     scenes: CreateSceneRequest[]
+    // ): Promise<LightweightScene[]> {
+    //     const sceneCount = await this.getProjectSceneCount(projectId)
+    //     const scenePromises = scenes.map((scene, index) =>
+    //         this.prisma.scene.create({
+    //             data: {
+    //                 projectId: projectId,
+    //                 description: scene.description,
+    //                 voiceOver: "",
+    //                 imageUrl: scene.imageUrl,
+    //                 indexInProject: sceneCount + index
+    //             },
+    //         })
+    //     )
 
-        return await Promise.all(scenePromises)
-    }
+    //     return await Promise.all(scenePromises)
+    // }
 
     async updateScene(
         index: number,
@@ -236,7 +237,7 @@ export default class ProjectRepository {
         voiceOver?: string,
         imageUrl?: string,
         isDeleted?: boolean
-    ): Promise<LightweightScene|null> {
+    ): Promise<LightweightScene | null> {
         return await this.prisma.scene.update({
             where: {
                 id: sceneId
@@ -251,7 +252,7 @@ export default class ProjectRepository {
         })
     }
 
-    async removeScene(sceneId: string): Promise<LightweightScene|null> {
+    async removeScene(sceneId: string): Promise<LightweightScene | null> {
         return await this.prisma.scene.update({
             where: {
                 id: sceneId
@@ -262,30 +263,58 @@ export default class ProjectRepository {
         })
     }
 
-    async removeScenePermanently(sceneId: string): Promise<LightweightScene | null> {
-        return await this.prisma.scene.delete({
-            where: {
-                id: sceneId
-            }
-        })
-    }
+    // async removeScenePermanently(sceneId: string): Promise<LightweightScene | null> {
+    //     return await this.prisma.scene.delete({
+    //         where: {
+    //             id: sceneId
+    //         }
+    //     })
+    // }
 
-    // Get all comments for a specific project
-    async getCommentsForProject(projectId: string): Promise<Partial<Comment>[]> {
-        return await this.prisma.comment.findMany({
+    // // Get all comments for a specific project
+    // async getCommentsForProject(projectId: string): Promise<Partial<Comment>[]> {
+    //     return await this.prisma.comment.findMany({
+    //         where: {
+    //             projectId,
+    //         },
+    //         select: {
+    //             id: true,
+    //             text: true,
+    //             author: {
+    //                 select: {
+    //                     id: true
+    //                 },
+    //             },
+    //             createdAt: true,
+    //         },
+    //     });
+    // }
+
+    async getArchivedProjectsByAuthor(authorId: string): Promise<LightweightProject[]> {
+        return await this.prisma.project.findMany({
             where: {
-                projectId,
+                authorId,
+                isDeleted: true
             },
             select: {
                 id: true,
-                text: true,
-                author: {
-                    select: {
-                        id: true
-                    },
-                },
+                title: true,
+                imageUrl: true,
+                isDeleted: true,
                 createdAt: true,
+                updatedAt: true,
             },
+        });
+    }
+
+    async restoreProject(projectId: string): Promise<LightweightProject | null> {
+        return await this.prisma.project.update({
+            where: {
+                id: projectId,
+            },
+            data: {
+                isDeleted: false,
+            }
         });
     }
 }

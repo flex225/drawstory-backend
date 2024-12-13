@@ -1,8 +1,6 @@
 import { autoInjectable } from "tsyringe";
 import ProjectRepository from "../../data-access/project.repository";
-import { Project, Scene, Comment } from "@prisma/client";
 import { CreateSceneRequest, SaveProjectRequest } from "../../entry-points/api/dtos/project.crud.dto";
-import { ProjectWithScenes } from "../../data-access/project.types";
 
 
 
@@ -45,10 +43,10 @@ export default class ProjectService {
         return await this.projectRepository.softDeleteProject(projectId)
     }
 
-    // Delete a project permanently by ID
-    async deleteProjectPermanently(projectId: string) {
-        return await this.projectRepository.deleteProjectPermanently(projectId)
-    }
+    // // Delete a project permanently by ID
+    // async deleteProjectPermanently(projectId: string) {
+    //     return await this.projectRepository.deleteProjectPermanently(projectId)
+    // }
 
     // Get all scenes for a specific project
     async getScenesForProject(projectId: string) {
@@ -65,12 +63,12 @@ export default class ProjectService {
         return await this.projectRepository.addSceneToProject(projectId, description, voiceOver, imageUrl)
     }
 
-    async batchAddSceneToProject(
-        projectId: string,
-        scenes: CreateSceneRequest[]
-    ) {
-        return await this.projectRepository.batchAddSceneToProject(projectId, scenes)
-    }
+    // async batchAddSceneToProject(
+    //     projectId: string,
+    //     scenes: CreateSceneRequest[]
+    // ) {
+    //     return await this.projectRepository.batchAddSceneToProject(projectId, scenes)
+    // }
 
     // async updateScene(
     //     sceneId: string,
@@ -85,12 +83,20 @@ export default class ProjectService {
         return await this.projectRepository.removeScene(sceneId)
     }
 
-    async removeScenePermanently(sceneId: string) {
-        return await this.projectRepository.removeScenePermanently(sceneId)
-    }
+    // async removeScenePermanently(sceneId: string) {
+    //     return await this.projectRepository.removeScenePermanently(sceneId)
+    // }
 
     // Get all comments for a specific project
-    async getCommentsForProject(projectId: string) {
-        return await this.projectRepository.getCommentsForProject(projectId)
+    // async getCommentsForProject(projectId: string) {
+    //     return await this.projectRepository.getCommentsForProject(projectId)
+    // }
+
+    async getArchivedProjectsByAuthor(authorId: string) {
+        return await this.projectRepository.getArchivedProjectsByAuthor(authorId)
+    }
+
+    async restoreProject(projectId: string) {
+        return await this.projectRepository.restoreProject(projectId)
     }
 }

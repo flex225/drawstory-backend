@@ -1,15 +1,15 @@
+import { PutObjectCommand, PutObjectCommandInput } from "@aws-sdk/client-s3";
+import { randomUUID } from "crypto";
 import { Request, Response, Router } from "express";
+import multer, { Multer } from "multer";
+import path from "path";
 import { autoInjectable } from "tsyringe";
-import ProjectService from "../../../domain/services/project.service";
+import config from "../../../../../config";
+import s3Client from "../../../../../libraries/aws/aws.client";
 import { ErrorResponse, ValidatedRequest } from "../../../../user/entry-points/api/dtos/userCrud.dto";
 import { LightweightProject, LightweightScene, NewProject, ProjectWithScenes } from "../../../data-access/project.types";
-import { AddSceneRequest, BatchAddSceneRequest, CreateProjectRequest, DeleteRequest, GetProjectParams, ProjectScenesRequest, SaveProjectRequest, UpdateProjectRequest, UpdateSceneRequest, UploadImagesRequest, UploadImagesResponse } from "../dtos/project.crud.dto";
-import config from "../../../../../config";
-import path from "path";
-import { PutObjectCommand, PutObjectCommandInput } from "@aws-sdk/client-s3";
-import s3Client from "../../../../../libraries/aws/aws.client";
-import multer, { Multer } from "multer";
-import { randomUUID } from "crypto";
+import ProjectService from "../../../domain/services/project.service";
+import { AddSceneRequest, CreateProjectRequest, DeleteRequest, GetProjectParams, ProjectScenesRequest, RestoreProjectRequest, SaveProjectRequest, UpdateProjectRequest, UploadImagesRequest, UploadImagesResponse } from "../dtos/project.crud.dto";
 
 
 @autoInjectable()
@@ -25,6 +25,7 @@ export default class ProjectController {
 
     private defineRoutes(): void {
         this._router.post("/create", this.createProject.bind(this))
+        this._router.get("/archived", this.getArchivedProjectsByAuthor.bind(this))
         this._router.get('/:projectId', this.getProjectById.bind(this))
         this._router.get("/", this.getProjectsByAuthor.bind(this))
         this._router.post('/save', this.saveProject.bind(this))
@@ -40,6 +41,7 @@ export default class ProjectController {
         // this._router.post("/comments", this.getProjectComments.bind(this))
         // this._router.post("/comments/add", this.addComment.bind(this))
         // this._router.post("/comments/delete", this.deleteComment.bind(this))
+        this._router.post("/restore", this.restoreProject.bind(this))
     }
 
     private async createProject(req: Request<{}, {}, CreateProjectRequest>, res: Response<NewProject | ErrorResponse>): Promise<void> {
@@ -72,85 +74,119 @@ export default class ProjectController {
     }
 
     private async saveProject(req: Request<{}, {}, SaveProjectRequest>, res: Response<ProjectWithScenes | ErrorResponse>): Promise<void> {
-        const { id } = req.body
-        if (!id) {
-            res.status(400).send({ message: "ID not found" })
-            return
-        }
-        const result = await this.projectService.saveProject(req.body)
-        if (!result) {
+        try {
+            const { id } = req.body
+            if (!id) {
+                res.status(400).send({ message: "ID not found" })
+                return
+            }
+            const result = await this.projectService.saveProject(req.body)
+            if (!result) {
+                res.status(500).send({ message: "Something went wrong" })
+                return
+            }
+            res.status(200).send(result)
+        } catch (error) {
+            console.log('Error in saveProject:', error)
             res.status(500).send({ message: "Something went wrong" })
-            return
         }
-        res.status(200).send(result)
     }
 
     private async getProjectsByAuthor(req: Request, res: Response<LightweightProject[] | ErrorResponse>): Promise<void> {
-        const userId = (req as ValidatedRequest).userId
-        const result = await this.projectService.getProjectsByAuthor(userId)
-        res.status(200).send(result)
+        try {
+            const userId = (req as ValidatedRequest).userId
+            const result = await this.projectService.getProjectsByAuthor(userId)
+            res.status(200).send(result)
+        } catch (error) {
+            console.log('Error in getProjectsByAuthor:', error)
+            res.status(500).send({ message: "Something went wrong" })
+        }
     }
 
     private async updateProject(req: Request<{}, {}, UpdateProjectRequest>, res: Response<LightweightProject | ErrorResponse>): Promise<void> {
-        const { projectId, title, imageUrl } = req.body
-        if (!projectId) {
-            res.status(400).send({ message: "ID not found" })
-            return
-        }
-        const result = await this.projectService.updateProject(projectId, title, imageUrl)
-        if (!result) {
+        try {
+            const { projectId, title, imageUrl } = req.body
+            if (!projectId) {
+                res.status(400).send({ message: "ID not found" })
+                return
+            }
+            const result = await this.projectService.updateProject(projectId, title, imageUrl)
+            if (!result) {
+                res.status(500).send({ message: "Something went wrong" })
+                return
+            }
+            res.status(200).send(result)
+        } catch (error) {
+            console.log('Error in updateProject:', error)
             res.status(500).send({ message: "Something went wrong" })
-            return
         }
-        res.status(200).send(result)
     }
 
     private async softDeleteProject(req: Request<{}, {}, DeleteRequest>, res: Response<LightweightProject | ErrorResponse>): Promise<void> {
-        const { id } = req.body
-        if (!id) {
-            res.status(400).send({ message: "ID not found" })
-            return
-        }
-        const result = await this.projectService.softDeleteProject(id)
-        if (!result) {
+        try {
+            const { id } = req.body
+            if (!id) {
+                res.status(400).send({ message: "ID not found" })
+                return
+            }
+            const result = await this.projectService.softDeleteProject(id)
+            if (!result) {
+                res.status(500).send({ message: "Something went wrong" })
+                return
+            }
+            res.status(200).send(result)
+        } catch (error) {
+            console.log('Error in softDeleteProject:', error)
             res.status(500).send({ message: "Something went wrong" })
-            return
         }
-        res.status(200).send(result)
     }
 
-    private async deleteProject(req: Request<{}, {}, DeleteRequest>, res: Response<ErrorResponse>): Promise<void> {
-        const { id } = req.body
-        if (!id) {
-            res.status(400).send({ message: "ID not found" })
-            return
-        }
-        const result = await this.projectService.deleteProjectPermanently(id)
-        if (!result) {
-            res.status(500).send({ message: "Something went wrong" })
-            return
-        }
-        res.status(200).send()
-    }
+    // private async deleteProject(req: Request<{}, {}, DeleteRequest>, res: Response<ErrorResponse>): Promise<void> {
+    //     try {
+    //         const { id } = req.body
+    //         if (!id) {
+    //             res.status(400).send({ message: "ID not found" })
+    //             return
+    //         }
+    //         const result = await this.projectService.deleteProjectPermanently(id)
+    //         if (!result) {
+    //             res.status(500).send({ message: "Something went wrong" })
+    //             return
+    //         }
+    //         res.status(200).send()
+    //     } catch (error) {
+    //         console.log('Error in deleteProject:', error)
+    //         res.status(500).send({ message: "Something went wrong" })
+    //     }
+    // }
 
     private async getProjectScenes(req: Request<{}, {}, ProjectScenesRequest>, res: Response<LightweightScene[] | ErrorResponse>): Promise<void> {
-        const { projectId } = req.body
-        if (!projectId) {
-            res.status(400).send({ message: "ID not found" })
-            return
+        try {
+            const { projectId } = req.body
+            if (!projectId) {
+                res.status(400).send({ message: "ID not found" })
+            }
+            const result = await this.projectService.getScenesForProject(projectId)
+            res.status(200).send(result)
+        } catch (error) {
+            console.log('Error in getProjectScenes:', error)
+            res.status(500).send({ message: "Something went wrong" })
         }
-        const result = await this.projectService.getScenesForProject(projectId)
-        res.status(200).send(result)
     }
 
     private async addScene(req: Request<{}, {}, AddSceneRequest>, res: Response<LightweightScene | ErrorResponse>): Promise<void> {
-        const { projectId, description, voiceOver, imageUrl } = req.body
-        if (!projectId) {
-            res.status(400).send({ message: "ID not found" })
-            return
+        try {
+            const { projectId, description, voiceOver, imageUrl } = req.body
+            if (!projectId) {
+                res.status(400).send({ message: "ID not found" })
+                return
+            }
+            const result = await this.projectService.addSceneToProject(projectId, description, voiceOver, imageUrl)
+            res.status(200).send(result)
+        } catch (error) {
+            console.log('Error in addScene:', error)
+            res.status(500).send({ message: "Something went wrong" })
         }
-        const result = await this.projectService.addSceneToProject(projectId, description, voiceOver, imageUrl)
-        res.status(200).send(result)
     }
 
     private async uploadImages(req: Request, res: Response<UploadImagesResponse | ErrorResponse>): Promise<void> {
@@ -173,7 +209,7 @@ export default class ProjectController {
                 res.status(400).send({ message: 'Bucket not configured' })
                 return
             }
-            
+
             const uploadedUrls = await Promise.all(
                 customReq.files.map(async (file: Express.Multer.File, index: number) => {
                     const fileExtension = path.extname(file.originalname)
@@ -201,15 +237,20 @@ export default class ProjectController {
         }
     }
 
-    private async batchAddScene(req: Request<{}, {}, BatchAddSceneRequest>, res: Response<LightweightScene[] | ErrorResponse>): Promise<void> {
-        const { projectId, scenes } = req.body
-        if (!projectId) {
-            res.status(400).send({ message: "ID not found" })
-            return
-        }
-        const result = await this.projectService.batchAddSceneToProject(projectId, scenes)
-        res.status(200).send(result)
-    }
+    // private async batchAddScene(req: Request<{}, {}, BatchAddSceneRequest>, res: Response<LightweightScene[] | ErrorResponse>): Promise<void> {
+    //     try {
+    //         const { projectId, scenes } = req.body
+    //         if (!projectId) {
+    //             res.status(400).send({ message: "ID not found" })
+    //             return
+    //         }
+    //         const result = await this.projectService.batchAddSceneToProject(projectId, scenes)
+    //         res.status(200).send(result)
+    //     } catch (error) {
+    //         console.log('Error in batchAddScene:', error)
+    //         res.status(500).send({ message: "Something went wrong" })
+    //     }
+    // }
 
     // private async updateScene(req: Request<{}, {}, UpdateSceneRequest>, res: Response<LightweightScene | ErrorResponse>): Promise<void> {
     //     const {sceneId, description, voiceOver, imageUrl} = req.body
@@ -226,38 +267,79 @@ export default class ProjectController {
     //  }
 
     private async removeScene(req: Request<{}, {}, DeleteRequest>, res: Response<ErrorResponse>): Promise<void> {
-        const { id } = req.body
-        if (!id) {
-            res.status(400).send({ message: "ID not found" })
-            return
-        }
-        const result = await this.projectService.removeScene(id)
-        if (!result) {
+        try {
+            const { id } = req.body
+            if (!id) {
+                res.status(400).send({ message: "ID not found" })
+                return
+            }
+            const result = await this.projectService.removeScene(id)
+            if (!result) {
+                res.status(500).send({ message: "Something went wrong" })
+                return
+            }
+            res.status(200).send()
+        } catch (error) {
+            console.log('Error in removeScene:', error)
             res.status(500).send({ message: "Something went wrong" })
-            return
         }
-        res.status(200).send()
     }
 
-    private async removeScenePermanently(req: Request<{}, {}, DeleteRequest>, res: Response<ErrorResponse>): Promise<void> {
-        const { id } = req.body
-        if (!id) {
-            res.status(400).send({ message: "ID not found" })
-            return
-        }
-        const result = await this.projectService.removeScenePermanently(id)
-        if (!result) {
-            res.status(500).send({ message: "Something went wrong" })
-            return
-        }
-        res.status(200).send()
-    }
+    // private async removeScenePermanently(req: Request<{}, {}, DeleteRequest>, res: Response<ErrorResponse>): Promise<void> {
+    //     try {
+    //         const { id } = req.body
+    //         if (!id) {
+    //             res.status(400).send({ message: "ID not found" })
+    //             return
+    //         }
+    //         const result = await this.projectService.removeScenePermanently(id)
+    //         if (!result) {
+    //             res.status(500).send({ message: "Something went wrong" })
+    //             return
+    //         }
+    //         res.status(200).send()
+    //     } catch (error) {
+    //         console.log('Error in removeScenePermanently:', error)
+    //         res.status(500).send({ message: "Something went wrong" })
+    //     }
+    // }
 
     // private async getProjectComments(req: Request, res: Response): Promise<void> { }
 
     // private async addComment(req: Request, res: Response): Promise<void> { }
 
     // private async deleteComment(req: Request, res: Response): Promise<void> { }
+
+    private async getArchivedProjectsByAuthor(req: Request, res: Response<LightweightProject[] | ErrorResponse>): Promise<void> {
+        try {
+            const userId = (req as ValidatedRequest).userId
+            const result = await this.projectService.getArchivedProjectsByAuthor(userId)
+
+            res.status(200).send(result)
+        } catch (error) {
+            console.log('Error in getArchivedProjectsByAuthor:', error)
+            res.status(500).send({ message: "Something went wrong" })
+        }
+    }
+
+    private async restoreProject(req: Request<{}, {}, RestoreProjectRequest>, res: Response<LightweightProject | ErrorResponse>): Promise<void> {
+        try {
+            const { id } = req.body
+            if (!id) {
+                res.status(400).send({ message: "ID not found" })
+                return
+            }
+            const result = await this.projectService.restoreProject(id)
+            if (!result) {
+                res.status(500).send({ message: "Something went wrong" })
+                return
+            }
+            res.status(200).send(result)
+        } catch (error) {
+            console.log('Error in restoreProject:', error)
+            res.status(500).send({ message: "Something went wrong" })
+        }
+    }
 
     public get routes(): Router {
         return this._router
