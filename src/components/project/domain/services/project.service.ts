@@ -99,4 +99,8 @@ export default class ProjectService {
     async restoreProject(projectId: string) {
         return await this.projectRepository.restoreProject(projectId)
     }
+
+    async getProjectSceneCount(projectId: string) {
+        return await this.projectRepository.getProjectSceneCount(projectId)
+    }
 }

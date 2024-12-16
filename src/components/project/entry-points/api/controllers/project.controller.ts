@@ -198,8 +198,10 @@ export default class ProjectController {
                 return
             }
             let id
+            let existingProjectIndexOffset = 0
             if (projectId) {
                 id = projectId
+                existingProjectIndexOffset = await this.projectService.getProjectSceneCount(projectId)
             } else {
                 id = randomUUID()
             }
@@ -213,7 +215,7 @@ export default class ProjectController {
             const uploadedUrls = await Promise.all(
                 customReq.files.map(async (file: Express.Multer.File, index: number) => {
                     const fileExtension = path.extname(file.originalname)
-                    const key = `${customReq.userId}/${id}/image_${index + 1}${fileExtension}`
+                    const key = `${customReq.userId}/${id}/image_${index + 1 + existingProjectIndexOffset}${fileExtension}`
                     const uploadParams: PutObjectCommandInput = {
                         Bucket: bucketName,
                         Key: key,
