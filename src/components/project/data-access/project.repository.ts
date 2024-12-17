@@ -101,6 +101,9 @@ export default class ProjectRepository {
                 createdAt: true,
                 updatedAt: true,
             },
+            orderBy: {
+                createdAt: 'desc'
+            }
         });
     }
 
