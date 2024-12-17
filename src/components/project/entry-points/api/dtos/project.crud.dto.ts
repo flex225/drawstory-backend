@@ -10,7 +10,8 @@ export interface CreateProjectRequest {
 export interface UploadImagesRequest extends ValidatedRequest {
     files: Express.Multer.File[],
     body: {
-        projectId?: string
+        projectId?: string,
+        sceneCount?: string
     }
 }
 

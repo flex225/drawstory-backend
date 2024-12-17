@@ -192,7 +192,8 @@ export default class ProjectController {
     private async uploadImages(req: Request, res: Response<UploadImagesResponse | ErrorResponse>): Promise<void> {
         const customReq = req as UploadImagesRequest
         try {
-            const { projectId } = customReq.body
+            const { projectId, sceneCount } = customReq.body
+            
             if (!customReq.files || !Array.isArray(customReq.files)) {
                 res.status(400).send({ message: 'No files uploaded' })
                 return
@@ -201,7 +202,7 @@ export default class ProjectController {
             let existingProjectIndexOffset = 0
             if (projectId) {
                 id = projectId
-                existingProjectIndexOffset = await this.projectService.getProjectSceneCount(projectId)
+                existingProjectIndexOffset = sceneCount ? parseInt(sceneCount) : 0
             } else {
                 id = randomUUID()
             }
