@@ -12,6 +12,7 @@ import authenticateJWT from "../../../../../libraries/auth/middlewares/jwt.middl
 import { GoogleOAuthRequest } from "../dtos/oauth.dto";
 import { OAuth2Client } from "google-auth-library";
 import config from "../../../../../config";
+import EmailService from "../../../domain/services/email.service";
 
 
 //TODO separate auth calls into separate component: auth
@@ -20,7 +21,7 @@ export default class OAuthController {
     private _router: Router
     private _googleClient: OAuth2Client
 
-    constructor(private userService: UserService, private authService: AuthService, private redisService: RedisService) {
+    constructor(private userService: UserService, private authService: AuthService, private redisService: RedisService, private emailService: EmailService) {
         this._router = Router()
         const googleClientId = config.googleClientId
         const googleClientSecret = config.googleClientSecret
@@ -79,6 +80,11 @@ export default class OAuthController {
             const token = generateToken(createdUser.id)
 
             await this.redisService.set(createdUser.id, { userId: createdUser.id, token: token })
+            
+            this.emailService.sendWelcomeEmail(email)
+                .catch(error => {
+                    console.log("🚀 ~ UserController ~ registerUser ~ error:", error)
+                })
 
             res.status(200).send({ token: token, userId: createdUser.id })
         } catch (error) {

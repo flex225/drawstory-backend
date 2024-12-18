@@ -9,6 +9,7 @@ import AuthService from "../../../domain/services/auth.service";
 import RedisService from "../../../../../libraries/loaders/redis.loader";
 import { generateToken } from "../../../../../libraries/auth/jwt/jwt.service";
 import authenticateJWT from "../../../../../libraries/auth/middlewares/jwt.middleware";
+import EmailService from "../../../domain/services/email.service";
 
 
 //TODO separate auth calls into separate component: auth
@@ -16,7 +17,7 @@ import authenticateJWT from "../../../../../libraries/auth/middlewares/jwt.middl
 export default class UserController {
     private _router: Router
 
-    constructor(private userService: UserService, private authService: AuthService, private redisService: RedisService) {
+    constructor(private userService: UserService, private authService: AuthService, private redisService: RedisService, private emailService: EmailService) {
         this._router = Router()
         this.defineRoutes()
     }
@@ -82,7 +83,12 @@ export default class UserController {
         const token = generateToken(createdUser.id)
 
         await this.redisService.set(createdUser.id, { userId: createdUser.id, token: token })
-
+        
+        this.emailService.sendWelcomeEmail(email)
+            .catch(error => {
+                console.log("🚀 ~ UserController ~ registerUser ~ error:", error)
+            })
+        
         res.status(200).send({ token: token, userId: createdUser.id })
     }
 
