@@ -81,7 +81,7 @@ export default class OAuthController {
 
             await this.redisService.set(createdUser.id, { userId: createdUser.id, token: token })
             
-            this.emailService.sendWelcomeEmail(email)
+            this.emailService.sendMarketingEmail(email)
                 .catch(error => {
                     console.log("🚀 ~ UserController ~ registerUser ~ error:", error)
                 })

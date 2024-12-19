@@ -6,6 +6,7 @@ import config from '../../../../config';
 export default class EmailService {
     private sesClient: SESClient;
     private isInSandbox: boolean = true;
+    private marketingEmail: string = "marketing@drawstory.ai";
 
     constructor() {
         this.sesClient = new SESClient({
@@ -91,6 +92,49 @@ export default class EmailService {
         return this.sendEmail(to, "Welcome to DrawStory", html)
     }
 
+    async sendMarketingEmail(newEmail: string): Promise<boolean> {
+        const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333333;
+                }
+                .container {
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }
+                .content {
+                    background-color: #ffffff;
+                    padding: 20px;
+                    border-radius: 5px;
+                }
+                .email-info {
+                    background-color: #f5f5f5;
+                    padding: 10px;
+                    border-radius: 3px;
+                    margin: 20px 0;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="content">
+                    <div class="email-info">
+                        <p>New user registered with: <strong>${newEmail}</strong></p>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        `
+        return this.sendEmail(this.marketingEmail, "New user registered on DrawStory", html)
+    }
+
     async sendEmail(
         to: string, 
         subject: string, 
@@ -98,9 +142,9 @@ export default class EmailService {
     ): Promise<boolean> {
         try {
             const command = new SendEmailCommand({
-                Source: 'marketing@drawstory.ai',
+                Source: 'no-reply@drawstory.ai',
                 Destination: {
-                    ToAddresses: [this.isInSandbox ? 'hayksmn@gmail.com' : to]
+                    ToAddresses: [to]
                 },
                 Message: {
                     Subject: {
