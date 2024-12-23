@@ -92,7 +92,7 @@ export default class EmailService {
         return this.sendEmail(to, "Welcome to DrawStory", html)
     }
 
-    async sendMarketingEmail(newEmail: string): Promise<boolean> {
+    async sendMarketingEmail(newEmail: string, userFullName?: string): Promise<boolean> {
         const html = `
         <!DOCTYPE html>
         <html>
@@ -127,6 +127,14 @@ export default class EmailService {
                     <div class="email-info">
                         <p>New user registered with: <strong>${newEmail}</strong></p>
                     </div>
+                    
+                    ${userFullName ?? 
+                        `
+                        <div class="email-info">
+                            <p>New user full name: <strong>${userFullName}</strong></p>
+                        </div>
+                        `
+                    }
                 </div>
             </div>
         </body>
