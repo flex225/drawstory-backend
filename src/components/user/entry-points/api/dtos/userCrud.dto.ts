@@ -8,7 +8,8 @@ export interface CreateUserBody {
 
 export interface CreateUserResponse {
     token: string,
-    userId: string
+    userId: string,
+    name?: string | null
 }
 
 export interface GetUserParams extends ParamsDictionary {
@@ -42,7 +43,8 @@ export interface LoginRequest {
 
 export interface LoginResponse {
     token: string,
-    userId: string
+    userId: string,
+    name?: string | null
 }
 
 export interface LogoutRequest {

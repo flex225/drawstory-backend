@@ -25,10 +25,11 @@ export default class UserRepository {
         })
     }
 
-    async createSocialUser(email: string, socialId: string, provider: string): Promise<User> {
+    async createSocialUser(email: string, socialId: string, provider: string, fullname?: string): Promise<User> {
         return await this.prisma.user.create({
             data: {
                 email: email,
+                fullname: fullname,
                 providerId: socialId,
                 provider: provider
             }
@@ -36,10 +37,12 @@ export default class UserRepository {
     }
 
     async updateUser(updatedUser: UserDto): Promise<User> {
+        console.log("🚀 ~ UserRepository ~ updateUser ~ updatedUser:", updatedUser)
         return await this.prisma.user.update({
             where: {id: updatedUser.id},
             data: {
-                email: updatedUser.email
+                email: updatedUser.email,
+                fullname: updatedUser.fullname
             }
         })
     }

@@ -11,6 +11,7 @@ export default class UserService {
 
     async getUserById(userId: string, shouldGivePassword: boolean = false) {
         const user = await this.userRepository.getUserById(userId)
+        console.log("🚀 ~ UserService ~ getUserById ~ user:", user)
         return user ? mapUserToUserDto(user, shouldGivePassword) : null
     }
 
@@ -25,8 +26,8 @@ export default class UserService {
         return mapUserToUserDto(newUser)
     }
 
-    async createSocialUser(email: string, socialId: string, provider: string) {
-        const newUser = await this.userRepository.createSocialUser(email, socialId, provider)
+    async createSocialUser(email: string, socialId: string, provider: string, fullname?: string) {
+        const newUser = await this.userRepository.createSocialUser(email, socialId, provider, fullname)
         return mapUserToUserDto(newUser)
     }
 

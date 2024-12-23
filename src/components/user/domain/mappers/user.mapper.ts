@@ -8,12 +8,14 @@ export function mapUserToUserDto(user: User, shouldGivePassword: boolean = false
         email: user.email,
         password: user.password,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        updatedAt: user.updatedAt,
+        fullname: user.fullname
     } : 
     {
         id: user.id,
         email: user.email,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        updatedAt: user.updatedAt,
+        fullname: user.fullname
     }
 }

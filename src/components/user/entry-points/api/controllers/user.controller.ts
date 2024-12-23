@@ -104,7 +104,7 @@ export default class UserController {
             return;
         }
 
-        res.status(200).send({ token: loginResult.token, userId: loginResult.userId });
+        res.status(200).send({ token: loginResult.token, userId: loginResult.userId, name: loginResult.name });
     }
 
     async logout(req: Request, res: Response<LogoutResponse | ErrorResponse>): Promise<void> {

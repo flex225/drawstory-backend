@@ -63,6 +63,7 @@ export default class OAuthController {
             const payload = ticket.getPayload()
             const email = payload?.email ?? ""
             const socialId = payload?.sub ?? ""
+            const fullname = payload?.name
 
             const emailValidationResult = validateEmail(email)
             if (emailValidationResult.errors.length > 0) {
@@ -76,7 +77,7 @@ export default class OAuthController {
                 return
             }
 
-            const createdUser = await this.userService.createSocialUser(email, socialId, "google")
+            const createdUser = await this.userService.createSocialUser(email, socialId, "google", fullname)
             const token = generateToken(createdUser.id)
 
             await this.redisService.set(createdUser.id, { userId: createdUser.id, token: token })
@@ -86,7 +87,7 @@ export default class OAuthController {
                     console.log("🚀 ~ UserController ~ registerUser ~ error:", error)
                 })
 
-            res.status(200).send({ token: token, userId: createdUser.id })
+            res.status(200).send({ token: token, userId: createdUser.id, name: createdUser.fullname })
         } catch (error) {
             console.log("🚀 ~ OAuthController ~ validateGoogleUser ~ error:", error)
             res.status(500).send({message: "Failed Google Authentication"})
@@ -108,14 +109,15 @@ export default class OAuthController {
             })
             const payload = ticket.getPayload()
             const email = payload?.email ?? ""
+            const fullname = payload?.name
 
-            const loginResult = await this.authService.loginSocialUser(email);
+            const loginResult = await this.authService.loginSocialUser(email, fullname);
             if (!loginResult) {
                 res.status(401).send({ message: 'Invalid credentials' });
                 return;
             }
 
-            res.status(200).send({ token: loginResult.token, userId: loginResult.userId });
+            res.status(200).send({ token: loginResult.token, userId: loginResult.userId, name: loginResult.name });
 
         } catch (error) {
             console.log("🚀 ~ OAuthController ~ login ~ error:", error)
