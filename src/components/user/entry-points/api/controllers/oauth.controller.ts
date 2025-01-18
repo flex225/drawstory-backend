@@ -117,6 +117,8 @@ export default class OAuthController {
                 return;
             }
 
+
+            await this.userService.updateLastLogin(loginResult.userId)
             res.status(200).send({ token: loginResult.token, userId: loginResult.userId, name: loginResult.name });
 
         } catch (error) {

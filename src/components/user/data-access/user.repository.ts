@@ -54,4 +54,11 @@ export default class UserRepository {
             }
         })
     }
+
+    async updateLastLogin(userId: string) {
+        await this.prisma.user.update({
+            where: {id: userId},
+            data: {lastLoginAt: new Date()}
+        })
+    }
 }

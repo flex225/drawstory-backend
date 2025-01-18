@@ -40,4 +40,8 @@ export default class UserService {
         const result = await this.userRepository.findEmail(email)
         return !Boolean(result)
     }
+
+    async updateLastLogin(userId: string) {
+        await this.userRepository.updateLastLogin(userId)
+    }
 }

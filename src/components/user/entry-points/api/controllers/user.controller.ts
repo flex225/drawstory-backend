@@ -40,6 +40,8 @@ export default class UserController {
 
         //Check email availability
         this._router.post("/email-available", this.checkEmailAvailability.bind(this))
+        //Update last login
+        this._router.get("/update-login", authenticateJWT, this.updateLastLogin.bind(this))
         //Get User via ID
         this._router.get("/:userId", authenticateJWT, this.getUser.bind(this))
     }
@@ -104,6 +106,7 @@ export default class UserController {
             return;
         }
 
+        await this.userService.updateLastLogin(loginResult.userId)
         res.status(200).send({ token: loginResult.token, userId: loginResult.userId, name: loginResult.name });
     }
 
@@ -153,6 +156,13 @@ export default class UserController {
             res.status(400).send({ message: "Email already in use" })
         }
     }
+
+    private async updateLastLogin(req: Request, res: Response<ErrorResponse>) {
+        const userId = (req as ValidatedRequest).userId
+        await this.userService.updateLastLogin(userId)
+        res.status(200).send()
+    }
+
 
 
     public get routes(): Router {
