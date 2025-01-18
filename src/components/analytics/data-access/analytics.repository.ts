@@ -20,6 +20,9 @@ export default class AnalyticsRepository {
 
     async getLatestInfo(): Promise<AnalyticsInfo[]> {
         const results = await this.prisma.user.findMany({
+            orderBy: {
+                email: 'asc'
+            },
             select: {
                 email: true,
                 lastLoginAt: true,
@@ -48,7 +51,6 @@ export default class AnalyticsRepository {
                             take: 1,
                             select: {
                                 createdAt: true
-
                             } 
                         }
                     }
