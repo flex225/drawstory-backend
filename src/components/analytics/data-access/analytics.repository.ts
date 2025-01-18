@@ -20,16 +20,14 @@ export default class AnalyticsRepository {
 
     async getLatestInfo(): Promise<AnalyticsInfo[]> {
         const results = await this.prisma.user.findMany({
-            orderBy: {
-                email: 'asc'
-            },
+            orderBy: [
+                { email: 'asc' },
+                { lastLoginAt: 'desc' }
+            ],
             select: {
                 email: true,
                 lastLoginAt: true,
                 projects: {
-                    orderBy: {
-                        createdAt: 'desc'
-                    },
                     select: {
                         id: true,
                         title: true,
@@ -68,7 +66,7 @@ export default class AnalyticsRepository {
                 updatedAt: project.updatedAt,
                 activeImages: project._count.scenes, // This now represents active (non-deleted) scenes
                 last_created_scene: project.scenes[0]?.createdAt || null
-            }))
+            })).sort((a, b) => (b.last_created_scene?.getTime() ?? 0) - (a.last_created_scene?.getTime() ?? 0))
         }));
     }
 }
