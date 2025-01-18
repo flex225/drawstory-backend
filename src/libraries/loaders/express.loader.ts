@@ -6,6 +6,7 @@ import config from "../../config"
 import authenticateJWT from "../auth/middlewares/jwt.middleware"
 import ProjectController from "../../components/project/entry-points/api/controllers/project.controller"
 import OAuthController from "../../components/user/entry-points/api/controllers/oauth.controller"
+import AnalyticsController from "../../components/analytics/entry-points/api/analytics.controller"
 
 const loadExpress = (app: Express) => {
     app.use(cors({ origin: "*" }))
@@ -20,7 +21,8 @@ const loadExpress = (app: Express) => {
     const projectController = container.resolve(ProjectController)
     app.use("/projects", authenticateJWT, projectController.routes)
 
-
+    const analyticsController = container.resolve(AnalyticsController)
+    app.use("/analytics", analyticsController.routes)
 
     app.listen(config.port)
     console.log("🚀 ~ drawstory ~ : App is running on port:",config.port)
