@@ -22,7 +22,8 @@ export interface UploadImagesResponse {
 
 export interface CreateSceneRequest {
     description: string,
-    imageUrl: string
+    imageUrl: string,
+    originalPrompt?: string
 }
 
 export interface GetProjectParams extends ParamsDictionary {
@@ -34,6 +35,7 @@ interface SaveProjectSceneRequest {
     description: string,
     voiceOver: string,
     imageUrl: string,
+    originalPrompt?: string,
     projectId: string,
     isDeleted?: boolean,
     indexInProject?: number,

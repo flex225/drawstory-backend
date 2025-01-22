@@ -44,6 +44,7 @@ export default class ProjectRepository {
                         projectId: project.id,
                         description: scene.description ?? "",
                         voiceOver: "",
+                        ...(scene.originalPrompt && { originalPrompt: scene.originalPrompt }),
                         indexInProject: index,
                         imageUrl: scene.imageUrl,
                     },
@@ -132,9 +133,9 @@ export default class ProjectRepository {
 
             const scenePromises = updatedProject.scenes.map((scene, index) => {
                 if (scene.id) {
-                    return this.updateScene(index, scene.id, scene.description, scene.voiceOver, scene.imageUrl, scene.isDeleted)
+                    return this.updateScene(index, scene.id, scene.description, scene.voiceOver, scene.imageUrl, scene.isDeleted, scene.originalPrompt)
                 } else {
-                    return this.addSceneToProject(updatedProject.id, scene.description, "", scene.imageUrl, index)
+                    return this.addSceneToProject(updatedProject.id, scene.description, "", scene.imageUrl, index, scene.originalPrompt)
                 }
             })
 
@@ -200,6 +201,7 @@ export default class ProjectRepository {
         voiceOver: string,
         imageUrl: string,
         index?: number,
+        originalPrompt?: string
     ): Promise<LightweightScene> {
         const addIndex = index ?? await this.getProjectSceneCount(projectId)
         return await this.prisma.scene.create({
@@ -208,7 +210,8 @@ export default class ProjectRepository {
                 description,
                 voiceOver,
                 imageUrl,
-                indexInProject: addIndex
+                indexInProject: addIndex,
+                ...(originalPrompt && { originalPrompt })
             },
         });
     }
@@ -239,7 +242,8 @@ export default class ProjectRepository {
         description?: string,
         voiceOver?: string,
         imageUrl?: string,
-        isDeleted?: boolean
+        isDeleted?: boolean,
+        originalPrompt?: string
     ): Promise<LightweightScene | null> {
         return await this.prisma.scene.update({
             where: {
@@ -250,7 +254,8 @@ export default class ProjectRepository {
                 description: description ?? "",
                 voiceOver: voiceOver ?? "",
                 imageUrl: imageUrl ?? "",
-                isDeleted: isDeleted ?? false
+                isDeleted: isDeleted ?? false,
+                ...(originalPrompt && { originalPrompt })
             }
         })
     }
