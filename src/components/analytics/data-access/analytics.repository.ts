@@ -1,3 +1,4 @@
+import config, { Environment } from "../../../config";
 import PrismaService from "../../../libraries/prisma/prisma.service";
 import { autoInjectable } from "tsyringe";
 
@@ -33,7 +34,7 @@ export default class AnalyticsRepository {
     async getLatestInfo(): Promise<AnalyticsInfo[]> {
         const results = await this.prisma.user.findMany({
             where: {
-                ...(process.env.NODE_ENV === 'production' && {
+                ...(config.env === Environment.Production && {
                     NOT: {
                         email: {
                             in: ['hayksmn@gmail.com', 'aakhnoyan@gmail.com']
