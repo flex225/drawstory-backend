@@ -3,15 +3,28 @@ import { autoInjectable } from "tsyringe";
 
 type AnalyticsInfo = {
     email: string;
-    lastLoginAt: Date;
+    lastLoginAt: string;
     projects: {
         id: string;
         title: string;
-        createdAt: Date;
-        updatedAt: Date;
+        createdAt: string;
+        updatedAt: string;
         activeImages: number;
-        last_created_scene: Date | null;
+        last_created_scene: string | null;
     }[];
+}
+
+function formatDate(date: Date | null): string {
+    if (!date) return "Never" 
+    return date.toLocaleDateString('en-US', {
+        month: 'numeric',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    })
 }
 
 @autoInjectable()
@@ -20,6 +33,15 @@ export default class AnalyticsRepository {
 
     async getLatestInfo(): Promise<AnalyticsInfo[]> {
         const results = await this.prisma.user.findMany({
+            where: {
+                ...(process.env.NODE_ENV === 'production' && {
+                    NOT: {
+                        email: {
+                            in: ['hayksmn@gmail.com', 'aakhnoyan@gmail.com']
+                        }
+                    }
+                })
+            },
             orderBy: [
                 { email: 'asc' },
                 { lastLoginAt: 'desc' }
@@ -52,21 +74,25 @@ export default class AnalyticsRepository {
                             } 
                         }
                     }
-                }
+                },
             }
         });
 
         return results.map(user => ({
-            email: user.email ?? "",
-            lastLoginAt: user.lastLoginAt ?? new Date(),
+            email: user.email,
+            lastLoginAt: formatDate(user.lastLoginAt),
             projects: user.projects.map(project => ({
                 id: project.id,
                 title: project.title,
-                createdAt: project.createdAt,
-                updatedAt: project.updatedAt,
-                activeImages: project._count.scenes, // This now represents active (non-deleted) scenes
-                last_created_scene: project.scenes[0]?.createdAt || null
-            })).sort((a, b) => (b.last_created_scene?.getTime() ?? 0) - (a.last_created_scene?.getTime() ?? 0))
+                createdAt: formatDate(project.createdAt),
+                updatedAt: formatDate(project.updatedAt),
+                activeImages: project._count.scenes,
+                last_created_scene: formatDate(project.scenes[0]?.createdAt)
+            })).sort((a, b) => {
+                const bTime = b.last_created_scene ? new Date(b.last_created_scene).getTime() : 0;
+                const aTime = a.last_created_scene ? new Date(a.last_created_scene).getTime() : 0;
+                return bTime - aTime;
+            })
         }));
     }
 }
