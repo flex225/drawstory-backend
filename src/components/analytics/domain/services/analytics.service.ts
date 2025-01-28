@@ -15,16 +15,27 @@ export default class AnalyticsService {
 
         // Flatten the data structure
         const flatData = data.flatMap(user =>
-            user.projects.map(project => ({
-                user_email: user.email,
-                last_login: user.lastLoginAt,
-                project_id: project.id,
-                project_title: project.title,
-                project_created_at: project.createdAt,
-                project_updated_at: project.updatedAt,
-                active_scenes: project.activeImages,
-                last_scene_created_at: project.last_created_scene
-            }))
+            user.projects.length > 0 ? 
+                user.projects.map(project => ({
+                    user_email: user.email,
+                    last_login: user.lastLoginAt,
+                    project_id: project.id,
+                    project_title: project.title,
+                    project_created_at: project.createdAt,
+                    project_updated_at: project.updatedAt,
+                    active_scenes: project.activeImages,
+                    last_scene_created_at: project.last_created_scene
+                })) :
+                [{
+                    user_email: user.email,
+                    last_login: user.lastLoginAt,
+                    project_id: "",
+                    project_title: "",
+                    project_created_at: "",
+                    project_updated_at: "",
+                    active_scenes: 0,
+                    last_scene_created_at: ""
+                }]
         )
         const csv = json2csv(flatData)
         const date = new Date()

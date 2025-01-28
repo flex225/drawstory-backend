@@ -81,7 +81,7 @@ export default class AnalyticsRepository {
         return results.map(user => ({
             email: user.email,
             lastLoginAt: formatDate(user.lastLoginAt),
-            projects: user.projects.map(project => ({
+            projects: user.projects?.map(project => ({
                 id: project.id,
                 title: project.title,
                 createdAt: formatDate(project.createdAt),
@@ -92,7 +92,7 @@ export default class AnalyticsRepository {
                 const bTime = b.last_created_scene ? new Date(b.last_created_scene).getTime() : 0;
                 const aTime = a.last_created_scene ? new Date(a.last_created_scene).getTime() : 0;
                 return bTime - aTime;
-            })
+            }) ?? []
         }));
     }
-}
+} 
