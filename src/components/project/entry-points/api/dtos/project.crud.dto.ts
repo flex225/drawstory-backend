@@ -21,7 +21,7 @@ export interface UploadImagesResponse {
 }
 
 export interface CreateSceneRequest {
-    description: string,
+    description?: string,
     imageUrl: string,
     originalPrompt?: string
 }
