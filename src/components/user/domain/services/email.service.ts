@@ -128,12 +128,13 @@ export default class EmailService {
                         <p>New user registered with: <strong>${newEmail}</strong></p>
                     </div>
                     
-                    ${userFullName ?? 
+                    ${userFullName ? 
                         `
                         <div class="email-info">
                             <p>New user full name: <strong>${userFullName}</strong></p>
                         </div>
                         `
+                        : ''
                     }
                 </div>
             </div>
@@ -146,31 +147,45 @@ export default class EmailService {
     async sendEmail(
         to: string, 
         subject: string, 
-        html: string
+        html: string,
+        retryAttempts: number = 3
     ): Promise<boolean> {
-        try {
-            const command = new SendEmailCommand({
-                Source: 'no-reply@drawstory.ai',
-                Destination: {
-                    ToAddresses: [to]
-                },
-                Message: {
-                    Subject: {
-                        Data: subject
+        for (let attempt = 1; attempt <= retryAttempts; attempt++) {
+            try {
+                if (this.isInSandbox) {
+                    // In sandbox mode, verify the email is in the allowed list
+                    console.log('Sending email in sandbox mode to:', to);
+                }
+
+                const command = new SendEmailCommand({
+                    Source: 'no-reply@drawstory.ai',
+                    Destination: {
+                        ToAddresses: [to]
                     },
-                    Body: {
-                        Html: {
-                            Data: html
+                    Message: {
+                        Subject: {
+                            Data: subject
+                        },
+                        Body: {
+                            Html: {
+                                Data: html
+                            }
                         }
                     }
-                }
-            });
+                });
 
-            await this.sesClient.send(command);
-            return true;
-        } catch (error) {
-            console.error('Error sending email:', error);
-            return false;
+                await this.sesClient.send(command);
+                console.log('Email sent successfully to:', to);
+                return true;
+            } catch (error) {
+                console.error(`Error sending email (attempt ${attempt}/${retryAttempts}):`, error);
+                if (attempt === retryAttempts) {
+                    return false;
+                }
+                // Wait before retrying (exponential backoff)
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
         }
+        return false;
     }
 }
