@@ -7,11 +7,13 @@ import authenticateJWT from "../auth/middlewares/jwt.middleware"
 import ProjectController from "../../components/project/entry-points/api/controllers/project.controller"
 import OAuthController from "../../components/user/entry-points/api/controllers/oauth.controller"
 import AnalyticsController from "../../components/analytics/entry-points/api/analytics.controller"
+import { responseLogger } from "../middlewares/logger.middleware"
 
 const loadExpress = (app: Express) => {
     app.use(cors({ origin: "*" }))
     app.use(express.json())
-    
+    app.use(responseLogger())
+
     const userController = container.resolve(UserController)
     app.use("/users", userController.routes)
 
@@ -25,7 +27,7 @@ const loadExpress = (app: Express) => {
     app.use("/analytics", analyticsController.routes)
 
     app.listen(config.port)
-    console.log("🚀 ~ drawstory ~ : App is running on port:",config.port)
+    console.log("🚀 ~ drawstory ~ : App is running on port:",config.port) 
 }
 
 export default loadExpress

@@ -24,17 +24,14 @@ export default class AuthService {
     }
 
     async loginSocialUser(email: string, name?: string): Promise<{ token: string, userId: string, name?: string | null } | null> {
-        console.log("🚀 ~ AuthService ~ loginSocialUser ~ email: string, name?: string:", email, name)
         const user = await this.userService.getUserByEmail(email);
         if (user) {
             if (!user.fullname && name) {
-                console.log("🚀 ~ AuthService ~ loginSocialUser ~ user.fullname && name:", user.fullname, name)
                 await this.userService.updateUser({ ...user, fullname: name })
             }
             const token = generateToken(user.id);
             await this.redisService.set(user.id, { userId: user.id, token: token });
 
-            console.log("🚀 ~ AuthService ~ loginSocialUser ~ { token, userId: user.id, name: user.fullname ?? name }:", { token, userId: user.id, name: user.fullname ?? name })
             return { token, userId: user.id, name: user.fullname ?? name };
         }
         return null;

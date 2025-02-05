@@ -37,7 +37,6 @@ export default class UserRepository {
     }
 
     async updateUser(updatedUser: UserDto): Promise<User> {
-        console.log("🚀 ~ UserRepository ~ updateUser ~ updatedUser:", updatedUser)
         return await this.prisma.user.update({
             where: {id: updatedUser.id},
             data: {

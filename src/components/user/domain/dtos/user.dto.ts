@@ -5,5 +5,7 @@ export interface UserDto {
     email: string,
     password?: string | null,
     createdAt: Date,
-    updatedAt: Date
+    updatedAt: Date,
+    provider?: string | null
+
 }

@@ -73,7 +73,17 @@ export default class OAuthController {
 
             const existingUser = await this.userService.getUserByEmail(email)
             if (existingUser) {
-                res.status(400).send({ message: "Email is already in use" })
+                if(existingUser.provider === "google") {
+                    const loginResult = await this.authService.loginSocialUser(email, fullname);
+                    if (!loginResult) {
+                        res.status(401).send({ message: 'Invalid credentials' });
+                        return;
+                    }
+                    await this.userService.updateLastLogin(loginResult.userId);
+                    res.status(200).send({ token: loginResult.token, userId: loginResult.userId, name: loginResult.name });
+                } else {
+                    res.status(400).send({ message: "Email is already in use" })
+                }
                 return
             }
 

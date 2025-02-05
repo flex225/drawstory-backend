@@ -206,7 +206,7 @@ export default class ProjectController {
             } else {
                 id = randomUUID()
             }
-            console.log(id)
+
             const bucketName = config.awsConfig.bucketName
             if (bucketName.length === 0) {
                 res.status(400).send({ message: 'Bucket not configured' })

@@ -11,7 +11,6 @@ export default class UserService {
 
     async getUserById(userId: string, shouldGivePassword: boolean = false) {
         const user = await this.userRepository.getUserById(userId)
-        console.log("🚀 ~ UserService ~ getUserById ~ user:", user)
         return user ? mapUserToUserDto(user, shouldGivePassword) : null
     }
 
