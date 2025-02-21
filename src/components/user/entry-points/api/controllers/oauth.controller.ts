@@ -120,7 +120,17 @@ export default class OAuthController {
             const payload = ticket.getPayload()
             const email = payload?.email ?? ""
             const fullname = payload?.name
-
+            
+            const existingUser = await this.userService.getUserByEmail(email)
+            if(existingUser && existingUser.provider !== "google") {
+                if(existingUser.provider) {
+                    res.status(400).send({ message: 'Please use correct provider to login' });
+                    return;
+                } else {
+                    res.status(400).send({ message: 'Please use email and password to login' });
+                    return;
+                }
+            }
             const loginResult = await this.authService.loginSocialUser(email, fullname);
             if (!loginResult) {
                 res.status(401).send({ message: 'Invalid credentials' });
