@@ -27,7 +27,6 @@ const loadExpress = (app: Express) => {
     app.use("/analytics", analyticsController.routes)
 
     app.listen(config.port)
-    console.log("🚀 ~ drawstory ~ : App is running on port:",config.port) 
 }
 
 export default loadExpress
