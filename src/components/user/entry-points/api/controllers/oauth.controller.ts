@@ -1,18 +1,16 @@
-import { Router, Request, Response } from "express";
-import { CheckEmailAvailabilityRequest, CreateUserBody, CreateUserResponse, ErrorResponse, GetUserParams, LoginRequest, LoginResponse, LogoutRequest, LogoutResponse, UpdateUserBody, UpdateUserResponse, ValidatedRequest } from "../dtos/userCrud.dto"
-import { autoInjectable } from "tsyringe";
-import UserService from "../../../domain/services/user.service";
-import { UserDto } from "../../../domain/dtos/user.dto";
-import { validateEmail } from "../../../../../libraries/auth/validators/email.validator";
-import { validatePasswordDetailed } from "../../../../../libraries/auth/validators/password.validator";
-import AuthService from "../../../domain/services/auth.service";
-import RedisService from "../../../../../libraries/loaders/redis.loader";
-import { generateToken } from "../../../../../libraries/auth/jwt/jwt.service";
-import authenticateJWT from "../../../../../libraries/auth/middlewares/jwt.middleware";
-import { GoogleOAuthRequest } from "../dtos/oauth.dto";
+import { Request, Response, Router } from "express";
 import { OAuth2Client } from "google-auth-library";
+import { autoInjectable } from "tsyringe";
 import config from "../../../../../config";
+import { generateToken } from "../../../../../libraries/auth/jwt/jwt.service";
+import { validateEmail } from "../../../../../libraries/auth/validators/email.validator";
+import RedisService from "../../../../../libraries/loaders/redis.loader";
+import { logOAuthError } from "../../../../../libraries/logging/logger";
+import AuthService from "../../../domain/services/auth.service";
 import EmailService from "../../../domain/services/email.service";
+import UserService from "../../../domain/services/user.service";
+import { GoogleOAuthRequest } from "../dtos/oauth.dto";
+import { CreateUserResponse, ErrorResponse, LoginResponse } from "../dtos/userCrud.dto";
 
 
 //TODO separate auth calls into separate component: auth
@@ -100,6 +98,7 @@ export default class OAuthController {
             res.status(200).send({ token: token, userId: createdUser.id, name: createdUser.fullname })
         } catch (error) {
             console.log("🚀 ~ OAuthController ~ validateGoogleUser ~ error:", error)
+            logOAuthError("Failed Google Authentication", error)
             res.status(500).send({message: "Failed Google Authentication"})
         }
     }
@@ -143,6 +142,7 @@ export default class OAuthController {
 
         } catch (error) {
             console.log("🚀 ~ OAuthController ~ login ~ error:", error)
+            logOAuthError("Failed Google Authentication", error)
             res.status(500).send({ message: "Failed Google Authentication" })
         }
     }

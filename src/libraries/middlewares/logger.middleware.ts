@@ -11,6 +11,7 @@ export const responseLogger = () => {
         res.on('finish', () => {
             console.log("🚀 ~ Response:", {
                 statusCode: res.statusCode,
+                payload: req.body,
                 body: res.locals.body,
                 path: req.originalUrl,
                 method: req.method
