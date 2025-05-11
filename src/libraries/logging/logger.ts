@@ -1,5 +1,10 @@
 import { Logging } from '@google-cloud/logging';
-const logging = new Logging();
+import config from '../../config';
+import path from 'path';
+
+const keyPath = path.resolve(process.cwd(), config.googleApplicationCredentials);
+
+const logging = new Logging({ projectId: "drawstory-443616", keyFilename: keyPath });
 
 const logName = "oauth-logs";
 const log = logging.log(logName);

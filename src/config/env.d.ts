@@ -14,7 +14,8 @@ declare global {
             GOOGLE_CLIENT_SECRET: string,
             AWS_SES_ACCESS_KEY_ID: string,
             AWS_SES_SECRET_ACCESS_KEY: string,
-            AWS_SES_REGION: string
+            AWS_SES_REGION: string,
+            GOOGLE_APPLICATION_CREDENTIALS: string
         }
     }
 }

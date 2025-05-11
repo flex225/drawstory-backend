@@ -26,7 +26,8 @@ interface ProjectConfig {
     awsConfig: AwsConfig,
     googleClientId: string,
     googleClientSecret: string,
-    awsSesConfig: AwsSesConfig
+    awsSesConfig: AwsSesConfig,
+    googleApplicationCredentials: string
 }
 
 const config: ProjectConfig = {
@@ -47,7 +48,8 @@ const config: ProjectConfig = {
         accessKey: process.env.AWS_SES_ACCESS_KEY_ID || "",
         secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY || "",
         region: process.env.AWS_SES_REGION || ""
-    }
+    },
+    googleApplicationCredentials: process.env.GOOGLE_APPLICATION_CREDENTIALS || ""
 }
 
 export default config
